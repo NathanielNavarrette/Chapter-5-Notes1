@@ -1,0 +1,96 @@
+     1                                  ;
+     2                                  ; file: sub3.asm
+     3                                  ; Subprogram example program
+     4                                  ;
+     5                                  
+     6                                  %include "asm_io.inc"
+     7                              <1> 	extern  read_int, print_int, print_uint,print_string
+     8                              <1> 	extern	read_char, print_char, print_nl
+     9                              <1> 	extern  sub_dump_regs, sub_dump_mem, sub_dump_math, sub_dump_stack
+    10                              <1> 
+    11                              <1> %macro 	dump_regs 1
+    12                              <1> 	push	  dword %1
+    13                              <1> 	call	  sub_dump_regs
+    14                              <1> %endmacro
+    15                              <1> 
+    16                              <1> 
+    17                              <1> ;
+    18                              <1> ; usage: dump_mem label, start-address, # paragraphs
+    19                              <1> %macro  dump_mem 3
+    20                              <1> 	push	 dword %1
+    21                              <1> 	push	 dword %2
+    22                              <1> 	push	 dword %3
+    23                              <1> 	call	 sub_dump_mem
+    24                              <1> %endmacro
+    25                              <1> 
+    26                              <1> %macro	dump_math 1
+    27                              <1> 	push	 dword %1
+    28                              <1> 	call	 sub_dump_math
+    29                              <1> %endmacro
+    30                              <1> 
+    31                              <1> %macro  dump_stack 3
+    32                              <1> 	push	 dword %3
+    33                              <1>         push     dword %2
+    34                              <1> 	push	 dword %1
+    35                              <1>         call     sub_dump_stack
+    36                              <1> %endmacro
+    37                                  
+    38                                  segment .data
+    39 00000000 00000000                sum     dd   0
+    40                                  
+    41                                  segment .bss
+    42 00000000 <res 00000004>          input   resd 1
+    43                                  
+    44                                   
+    45                                  
+    46                                  segment .text
+    47                                          global  asm_main
+    48                                  
+    49                                  asm_main:
+    50 00000000 C8000000                        enter   0,0               ; setup routine
+    51 00000004 60                              pusha
+    52                                          ;push    dword 10
+    53                                          ;push    dword 20
+    54 00000005 E803000000                      call    add
+    55                                          ;pop     eax
+    56                                          ;pop     eax
+    57                                  
+    58 0000000A 61                              popa
+    59 0000000B C9                              leave                     
+    60 0000000C C3                              ret
+    61                                  
+    62                                  segment .data
+    63 00000004 456E74657220666972-     prompt1 db "Enter first number",10,0
+    64 0000000D 7374206E756D626572-
+    65 00000016 0A00               
+    66 00000018 456E74657220736563-     prompt2 db "Enter second number",10,0
+    67 00000021 6F6E64206E756D6265-
+    68 0000002A 720A00             
+    69                                  segment .bss
+    70 00000004 <res 00000004>          input1  resd 1
+    71 00000008 <res 00000004>          input2  resd 1
+    72                                  segment .text
+    73                                  add:
+    74 0000000D 55                              push    ebp
+    75 0000000E 89E5                            mov     ebp, esp
+    76 00000010 B8[04000000]                    mov     eax,prompt1
+    77 00000015 E8(00000000)                    call    print_string
+    78 0000001A E8(00000000)                    call    read_int
+    79 0000001F 50                              push    eax
+    80 00000020 B8[18000000]                    mov     eax,prompt2
+    81 00000025 E8(00000000)                    call    print_string
+    82 0000002A B8[08000000]                    mov     eax,input2
+    83 0000002F E8(00000000)                    call    read_int
+    84 00000034 030424                          add     eax,[esp]
+    85 00000037 B8FFFFFFFF                      mov     eax,0xFFFFFFFF
+    86 0000003C E8(00000000)                    call    print_uint
+    87 00000041 E8(00000000)                    call    print_nl
+    88 00000046 58                              pop     eax
+    89 00000047 5D                              pop     ebp
+    90 00000048 C3                              ret
+    91                                  
+    92                                  
+    93                                  
+    94                                  
+    95                                  
+    96                                  

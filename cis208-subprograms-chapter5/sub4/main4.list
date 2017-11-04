@@ -1,0 +1,102 @@
+     1                                  
+     2                                  
+     3                                  ;
+     4                                  ; file: main4.asm
+     5                                  ; Multi-module subprogram example program
+     6                                  ;
+     7                                  ; To create executable:
+     8                                  ; Using djgpp:
+     9                                  ; nasm -f coff sub4.asm
+    10                                  ; nasm -f coff main4.asm
+    11                                  ; gcc -o sub4 sub4.o main4.o driver.c asm_io.o
+    12                                  ;
+    13                                  ; Using Borland C/C++
+    14                                  ; nasm -f obj sub4.asm
+    15                                  ; nasm -f obj main4.asm
+    16                                  ; bcc32 sub4.obj main4.asm driver.c asm_io.obj
+    17                                  
+    18                                  %include "asm_io.inc"
+    19                              <1> 	extern  read_int, print_int, print_string
+    20                              <1> 	extern	read_char, print_char, print_nl
+    21                              <1> 	extern  sub_dump_regs, sub_dump_mem, sub_dump_math, sub_dump_stack
+    22                              <1> 
+    23                              <1> %macro 	dump_regs 1
+    24                              <1> 	push	  dword %1
+    25                              <1> 	call	  sub_dump_regs
+    26                              <1> %endmacro
+    27                              <1> 
+    28                              <1> 
+    29                              <1> ;
+    30                              <1> ; usage: dump_mem label, start-address, # paragraphs
+    31                              <1> %macro  dump_mem 3
+    32                              <1> 	push	 dword %1
+    33                              <1> 	push	 dword %2
+    34                              <1> 	push	 dword %3
+    35                              <1> 	call	 sub_dump_mem
+    36                              <1> %endmacro
+    37                              <1> 
+    38                              <1> %macro	dump_math 1
+    39                              <1> 	push	 dword %1
+    40                              <1> 	call	 sub_dump_math
+    41                              <1> %endmacro
+    42                              <1> 
+    43                              <1> %macro  dump_stack 3
+    44                              <1> 	push	 dword %3
+    45                              <1>         push     dword %2
+    46                              <1> 	push	 dword %1
+    47                              <1>         call     sub_dump_stack
+    48                              <1> %endmacro
+    49                                  
+    50                                  segment .data
+    51 00000000 00000000                sum     dd   0
+    52                                  
+    53                                  segment .bss
+    54 00000000 <res 00000004>          input   resd 1
+    55                                  
+    56                                   
+    57                                  
+    58                                  ;
+    59                                  ; psuedo-code algorithm
+    60                                  ; i = 1;
+    61                                  ; sum = 0;
+    62                                  ; while( get_int(i, &input), input != 0 ) {
+    63                                  ;   sum += input;
+    64                                  ;   i++;
+    65                                  ; }
+    66                                  ; print_sum(num);
+    67                                  
+    68                                  segment .text
+    69                                          global  asm_main
+    70                                          extern  get_int, print_sum
+    71                                  asm_main:
+    72 00000000 C8000000                        enter   0,0               ; setup routine
+    73 00000004 60                              pusha
+    74                                  
+    75 00000005 BA01000000                      mov     edx, 1            ; edx is 'i' in pseudo-code
+    76                                  while_loop:
+    77 0000000A 52                              push    edx               ; save i on stack
+    78 0000000B 68[00000000]                    push    dword input       ; push address on input on stack
+    79 00000010 E8(00000000)                    call    get_int
+    80 00000015 83C408                          add     esp, 8            ; remove i and &input from stack
+    81                                  
+    82 00000018 A1[00000000]                    mov     eax, [input]
+    83 0000001D 83F800                          cmp     eax, 0
+    84 00000020 7409                            je      end_while
+    85                                  
+    86 00000022 0105[00000000]                  add     [sum], eax        ; sum += input
+    87                                  
+    88 00000028 42                              inc     edx
+    89 00000029 EBDF                            jmp     short while_loop
+    90                                  
+    91                                  end_while:
+    92 0000002B FF35[00000000]                  push    dword [sum]       ; push value of sum onto stack
+    93 00000031 E8(00000000)                    call    print_sum
+    94 00000036 59                              pop     ecx               ; remove [sum] from stack
+    95                                  
+    96 00000037 61                              popa
+    97 00000038 C9                              leave                     
+    98 00000039 C3                              ret
+    99                                  
+   100                                  
+   101                                  
+   102                                  
